@@ -32,15 +32,19 @@ async function register(user) {
   return await newUser.save();
 }
 
-async function login(email, passWord) {
-  const userDB = await userModel.findOne({ email });
+async function login(info) {
+  const userDB = await userModel.findOne({ email: info.email });
 
-  const checkPass = bcrypt.compare(userDB.passWord, passWord);
+  if (!userDB || userDB === null) {
+    throw new Error("User is not exits!");
+  }
+
+  const checkPass = bcrypt.compareSync(info.passWord, userDB.passWord);
 
   if (!checkPass) {
     throw new Error("Password is invalid!");
   }
-  const token = jwt.sign({ userId: userDB.id }, process.env.TOKEN_SECRET, {
+  const token = jwt.sign({ userId: userDB._id }, process.env.SECRET_KEY, {
     expiresIn: "1d",
   });
   return await { token: token };
@@ -64,14 +68,12 @@ async function updateProfile(profile, userId) {
     throw new Error("Profile is not create!");
   }
 
-
   for (const key in profile) {
     oldProfile[key] = profile[key];
   }
 
   return await oldProfile.save();
 }
-
 
 async function deleteProfile(userId) {
   const currentProfile = await profileModel.findOne({ userId: userId });
@@ -80,14 +82,48 @@ async function deleteProfile(userId) {
     throw new Error("Profile is not create!");
   }
 
-  return await profileModel.deleteOne({userId: userId});
+  return await profileModel.deleteOne({ userId: userId });
 }
 
+async function deleteUser(userId) {
+  const currentAccount = await userModel.findOne({
+    _id: userId,
+  });
+
+
+  if (!currentAccount) {
+    throw new Error("User is not create!");
+  }
+
+  return await currentAccount.deleteOne({ userId: userId });
+}
+
+async function updateUser(newInfo, userId) {
+  const currentAccount = await userModel.findOne({
+    _id: userId,
+  });
+  if (!currentAccount) {
+    throw new Error("User is not create!");
+  }
+
+  const genSalt = await bcrypt.genSalt(10);
+
+  newInfo.passWord = bcrypt.hashSync(newInfo.passWord, genSalt);
+
+  for(const key in newInfo ){
+    
+    currentAccount[key] = newInfo[key];
+  }
+
+  return await currentAccount.save();
+}
 
 export const UserService = {
   register,
   login,
+  deleteUser,
+  updateUser,
   createProfile,
   updateProfile,
-  deleteProfile
+  deleteProfile,
 };

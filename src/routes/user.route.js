@@ -8,11 +8,15 @@ UserRouter.post("/register", UserController.register);
 
 UserRouter.post("/login", UserController.login);
 
+UserRouter.delete("/delete-user", verifyToken, UserController.deleteUser);
+
+UserRouter.put("/update-user", verifyToken, UserController.updateUser);
+
 
 UserRouter.post("/create-profile", verifyToken, UserController.createProfile);
 
-UserRouter.post("/update-profile", verifyToken, UserController.updateProfile);
+UserRouter.put("/update-profile", verifyToken, UserController.updateProfile);
 
-UserRouter.post("/delete-profile", verifyToken, UserController.deleteProfile);
+UserRouter.delete("/delete-profile", verifyToken, UserController.deleteProfile);
 
 export { UserRouter };
